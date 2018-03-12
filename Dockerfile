@@ -6,6 +6,7 @@ RUN pip3 install --no-cache-dir --ignore-installed \
   requests \
   && pip3 install --upgrade --no-cache-dir --ignore-installed https://github.com/keboola/python-docker-application/archive/2.0.0.zip
 
-COPY . /src/
+COPY . /code/
+WORKDIR /code/
 
-CMD python3 -u /src/main.py
+CMD python3 -u /code/main.py

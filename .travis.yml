@@ -5,7 +5,7 @@ services:
 
 before_script:
   - docker build . --tag=my-component
-  - docker run my-component python -m 'pytest'
+  - docker run -e KBC_EX_CLIENT_ID -e KBC_EX_CLIENT_SECRET -e KBC_EX_REFRESH_TOKEN my-component python3 -m 'pytest'
 
 after_success:
   - docker images
