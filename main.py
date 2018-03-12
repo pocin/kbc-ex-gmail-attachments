@@ -1,21 +1,12 @@
 import requests
 import os
+import sys
 from keboola.docker import Config
 from urllib.parse import urljoin
 import base64
+import logging
 
-# {
-#     "installed": {
-#         "client_id": "738574772797-n8jrb960o0jkb2ci8ud0p59f6esf7i55.apps.googleusercontent.com",
-#         "project_id": "keboola-connection-167714",
-#         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-#         "token_uri": "https://accounts.google.com/o/oauth2/token",
-#         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-#         "client_secret": "cJJ4JM5eKVbvDv6aoF9Ij7It",
-#         "redirect_uris": ["urn:ietf:wg:oauth:2.0:oob", "http://localhost"]
-#     }
-# }
-REQUIRED_PARAMS = ['client_id', '#client_secret', '#refresh_token']
+REQUIRED_PARAMS = ['client_id', '#client_secret', '#refresh_token', 'queries']
 
 def parse_config(folder='/data'):
     cfg = Config(folder)
@@ -23,7 +14,6 @@ def parse_config(folder='/data'):
     for param in REQUIRED_PARAMS:
         assert param in params, "{} not in {}!".format(param, params)
     return params
-
 
 
 class GmailClient:
@@ -96,18 +86,33 @@ class GmailClient:
                 self._download_attachment(message_id, att_id, outpath)
 
 class AttachmentsExtractor(GmailClient):
-    def __init__(self, client_id, client_secret, refresh_token, outdir='/data/out/tables'):
-        super().__init__(client_id, client_secret, refresh_token)
-        self.outdir = outdir
-
-    def search_and_download_attachments(self, query):
+    def search_and_download_attachments(self, query, outdir):
         messages = self.messages(query)
         for message in messages['messages']:
-            self.download_message_attachments(message['id'], self.outdir)
+            self.download_message_attachments(message['id'], outdir)
 
+def main(params, outdir):
+    queries = params['queries']
+    ex = AttachmentsExtractor(
+        client_id=params['client_id'],
+        client_secret=params['#client_secret'],
+        refresh_token=params['#refresh_token'])
+    for query in queries:
+        out = ex.search_and_download_attachments(query['q'], outdir)
 
 if __name__ == "__main__":
-    params = parse_config()
-    print(params)
-
+    try:
+        params = parse_config()
+        if params.get('debug'):
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.INFO)
+        outdir = os.path.join(os.getenv("KBC_DATADIR"), 'out/tables')
+        main(params, outdir)
+    except (ValueError, requests.HTTPError) as err:
+        logging.error("Something is wrong:")
+        sys.exit(1)
+    except:
+        logging.exception("Internal error")
+        sys.exit(2)
 
