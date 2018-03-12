@@ -5,6 +5,7 @@ services:
 
 before_script:
   - docker build . --tag=my-component
+  - docker run my-component python -m 'pytest'
 
 after_success:
   - docker images

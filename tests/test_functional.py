@@ -5,13 +5,13 @@ import os
 
 def test_main_downloading(tmpdir):
     params = {
-        "#refresh_token": os.getenv["KBC_EX_REFRESH_TOKEN"],
+        "#refresh_token": os.environ["KBC_EX_REFRESH_TOKEN"],
         "client_id": os.environ["KBC_EX_CLIENT_ID"],
         "#client_secret": os.environ["KBC_EX_CLIENT_SECRET"],
         "queries": [
             {
                 "name": "KASKUS reports",
-                "q": "KASKUS_GDFP has:attachment newer_than:1d"
+                "q": "kbc-ex-gmail-attachments has:attachment"
             }
         ]
     }
@@ -19,4 +19,5 @@ def test_main_downloading(tmpdir):
     main(params, outdir)
 
     downloaded_files = os.listdir(outdir)
-    assert len(downloaded_files) > 0
+    assert len(downloaded_files) == 1
+    assert downloaded_files[0] == 'test.csv'
