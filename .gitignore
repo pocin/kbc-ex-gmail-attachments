@@ -4,3 +4,5 @@ config.json
 out/
 in/
 **/__pycache__
+.cache
+**/.env

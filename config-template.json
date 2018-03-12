@@ -1,0 +1,12 @@
+{
+    "params":{
+        "#refresh_token": "",
+        "client_id": "",
+        "#client_secret": "",
+        "queries": [
+            { "name": "ARBITRARY NAME reports",
+              "q": "suuubject has:attachment newer_than:21d"
+            }
+        ]
+    }
+}

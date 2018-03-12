@@ -1,6 +1,8 @@
 config.json
 **/*.ipynb
+**/.env
 .ipynb_checkpoints
+.cache
 out/
 in/
 **/__pycache__
