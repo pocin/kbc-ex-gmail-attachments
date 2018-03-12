@@ -1,0 +1,6 @@
+config.json
+**/*.ipynb
+.ipynb_checkpoints
+out/
+in/
+**/__pycache__
