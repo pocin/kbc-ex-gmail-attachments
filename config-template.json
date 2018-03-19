@@ -5,7 +5,8 @@
         "#client_secret": "",
         "queries": [
             { "name": "ARBITRARY NAME reports",
-              "q": "suuubject has:attachment newer_than:21d"
+              "q": "suuubject has:attachment newer_than:21d",
+              "needs_processors": true
             }
         ]
     }

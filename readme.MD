@@ -12,14 +12,16 @@ A basic gmail attachments extractor meant to be used alongside with processors.
     "#client_secret": "",
     "queries": [
         { "name": "ARBITRARY NAME reports",
-          "q": "suuubject has:attachment newer_than:21d"
+          "q": "suuubject has:attachment newer_than:21d",
+          "needs_processors": true
         }
     ]
 }
 ```
-will download all attachments (in all formats) for emails identified by the `q` querystring to /data/out/tables
-
-If it's valid csv, then all good, but for something extra use processors.
+will download all attachments (in all formats) for emails identified by the `q` querystring.
+The loaction `tables/files` depends on the `needs_processors` parameter. 
+If the attachment is a valid csv, set it to `false` and it will be uploaded to `/data/out/tables` and to storage
+If the attachment is not a valid csv (xlsx, zip, ...), set it to `true` and it will be uploaded to `/data/out/files` and processors should be used in that case
 
 # Development
 TODO: make public & add OAuth2 support

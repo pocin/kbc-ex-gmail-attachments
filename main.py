@@ -38,7 +38,7 @@ class GmailClient:
             try:
                 resp.raise_for_status()
             except Exception as e:
-                print(e)
+                logging.exception(resp.text)
                 raise
             else:
                 self._access_token = resp.json()['access_token']
@@ -51,8 +51,7 @@ class GmailClient:
         try:
             resp.raise_for_status()
         except Exception as e:
-            print(e)
-            print(resp.content)
+            logging.exception(resp.text)
             raise
         else:
             return resp.json()
@@ -68,7 +67,7 @@ class GmailClient:
 
     def _download_attachment(self, msg_id, attachment_id, outpath):
         endpoint = 'messages/{}/attachments/{}'.format(msg_id, attachment_id)
-        print("Downloading {} to {}".format(endpoint, outpath))
+        logging.info("Downloading %s to %s", endpoint, outpath)
         resp = self._get(endpoint)
         with open(outpath, 'wb') as fout:
             fout.write(base64.urlsafe_b64decode(resp['data']))
@@ -76,7 +75,7 @@ class GmailClient:
 
     def download_message_attachments(self, message_id, outdir):
         """Download all attachments for given message to outdir"""
-        print("Downloading attachments for ", message_id)
+        logging.debug("Downloading attachments for %s", message_id)
         msg = self.message(message_id)
         for part in msg['payload']['parts']:
             filename = part['filename']
@@ -91,13 +90,21 @@ class AttachmentsExtractor(GmailClient):
         for message in messages['messages']:
             self.download_message_attachments(message['id'], outdir)
 
-def main(params, outdir):
+def main(params, datadir):
     queries = params['queries']
     ex = AttachmentsExtractor(
         client_id=params['client_id'],
         client_secret=params['#client_secret'],
         refresh_token=params['#refresh_token'])
     for query in queries:
+        if query.get('needs_processors'):
+            outdir = os.path.join(datadir, 'out/files')
+        else:
+            outdir = os.path.join(datadir, 'out/tables')
+        try:
+            os.makedirs(outdir)
+        except FileExistsError:
+            pass
         out = ex.search_and_download_attachments(query['q'], outdir)
 
 if __name__ == "__main__":
@@ -107,9 +114,8 @@ if __name__ == "__main__":
             logging.basicConfig(level=logging.DEBUG)
         else:
             logging.basicConfig(level=logging.INFO)
-        outdir = os.path.join(os.getenv("KBC_DATADIR"), 'out/tables')
-        main(params, outdir)
-    except (ValueError, requests.HTTPError) as err:
+        main(params, datadir=os.environ["KBC_DATADIR"])
+    except (ValueError, requests.HTTPError, AssertionError) as err:
         logging.error("Something is wrong:")
         sys.exit(1)
     except:
