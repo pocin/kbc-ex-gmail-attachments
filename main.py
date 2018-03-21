@@ -19,7 +19,7 @@ def parse_config(folder='/data'):
     auth_data = dict(
         client_id=cfg.get_oauthapi_appkey(),
         client_secret=cfg.get_oauthapi_appsecret(),
-        refresh_token=json.loads(cfg.get_oauthapi_data())['refresh_token']
+        refresh_token=cfg.get_oauthapi_data()['refresh_token']
     )
     return params, auth_data
 
