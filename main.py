@@ -1,4 +1,5 @@
 import requests
+import json
 import os
 import sys
 from keboola.docker import Config
@@ -6,14 +7,21 @@ from urllib.parse import urljoin
 import base64
 import logging
 
-REQUIRED_PARAMS = ['client_id', '#client_secret', '#refresh_token', 'queries']
+REQUIRED_PARAMS = ['queries']
 
 def parse_config(folder='/data'):
     cfg = Config(folder)
     params = cfg.get_parameters()
     for param in REQUIRED_PARAMS:
         assert param in params, "{} not in {}!".format(param, params)
-    return params
+
+    params = cfg.get_parameters()
+    auth_data = dict(
+        client_id=cfg.get_oauthapi_appkey(),
+        client_secret=cfg.get_oauthapi_appsecret(),
+        refresh_token=json.loads(cfg.get_oauthapi_data())['refresh_token']
+    )
+    return params, auth_data
 
 
 class GmailClient:
@@ -90,12 +98,13 @@ class AttachmentsExtractor(GmailClient):
         for message in messages['messages']:
             self.download_message_attachments(message['id'], outdir)
 
-def main(params, datadir):
+def main(params, client_id, client_secret, refresh_token, datadir):
     queries = params['queries']
+
     ex = AttachmentsExtractor(
-        client_id=params['client_id'],
-        client_secret=params['#client_secret'],
-        refresh_token=params['#refresh_token'])
+        client_id=client_id,
+        client_secret=client_secret,
+        refresh_token=refresh_token)
     for query in queries:
         if query.get('needs_processors'):
             outdir = os.path.join(datadir, 'out/files')
@@ -109,16 +118,15 @@ def main(params, datadir):
 
 if __name__ == "__main__":
     try:
-        params = parse_config()
+        params, auth_data = parse_config()
         if params.get('debug'):
             logging.basicConfig(level=logging.DEBUG)
         else:
             logging.basicConfig(level=logging.INFO)
-        main(params, datadir=os.environ["KBC_DATADIR"])
+        main(params, datadir=os.environ["KBC_DATADIR"], **auth_data)
     except (ValueError, requests.HTTPError, AssertionError) as err:
         logging.error("Something is wrong:")
         sys.exit(1)
     except:
         logging.exception("Internal error")
         sys.exit(2)
-
