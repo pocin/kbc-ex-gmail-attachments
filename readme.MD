@@ -1,5 +1,4 @@
 # About
-https://github.com/pocin/kbc-ex-gmail-attachments.git
 
 A basic gmail attachments extractor meant to be used alongside with processors.
 
@@ -20,8 +19,68 @@ A basic gmail attachments extractor meant to be used alongside with processors.
 ```
 will download all attachments (in all formats) for emails identified by the `q` querystring.
 The loaction `tables/files` depends on the `needs_processors` parameter. 
-If the attachment is a valid csv, set it to `false` and it will be uploaded to `/data/out/tables` and to storage
-If the attachment is not a valid csv (xlsx, zip, ...), set it to `true` and it will be uploaded to `/data/out/files` and processors should be used in that case
+- If the attachment is a valid csv, set `"needs_processors": "false` and it will be saved to `/data/out/tables`
+- If the attachment is not a valid csv (xlsx, zip, ...), set it to `true`. The attachments will be downloaded to `/data/out/files` and processors should be used in that case (see example below)
+
+## Examples
+### zipped csvs skipping header and footer (incrementaly)
+Component:
+Downloads all emails matching given query (try it in your gmail inbox) into `/data/out/files` (since `"needs_processors": true`)
+{
+    "#refresh_token": "",
+    "client_id": "",
+    "#client_secret": "",
+    "queries": [
+        { "name": "ARBITRARY NAME reports, not used anywhere now",
+          "q": "subject:(AGENCY_NAME) campaign report has:attachment newer_than:3d",
+          "needs_processors": true
+        }
+    ]
+}
+
+the newer_than:7d parameter ensures that if the extractor failed for some reason in the past, the next iteration will backfill the data.
+
+In this case, the attachment is a `zip` containing a csv. All the csvs have same structure, hence we can consider them as a sliced table.
+```
+{
+  "after": [
+    {"definition": {"component": "keboola.processor-decompress"}},
+    {
+      "definition": {"component": "keboola.processor-flatten-folders"},
+      "parameters": {"starting_depth": 0}},
+    {
+      "definition": {"component": "keboola.processor-move-files"},
+      "parameters": {
+        "direction": "tables",
+        "folder": "tablename_in_storage.csv"
+      }
+    },
+    {
+      "definition": {"component": "keboola.processor-skip-lines"},
+      "parameters": {
+        "lines": 12,
+        "direction_from": "top"
+      }
+    },
+    {
+      "definition": {"component": "keboola.processor-skip-lines"},
+      "parameters": {
+        "lines": 1,
+        "direction_from": "bottom"
+      }
+    },
+    {
+      "definition": {"component": "keboola.processor-create-manifest"},
+      "parameters": {
+        "columns": ["campaign", "date", "impressions", "clicks",
+                    "total_conversions", "media_cost"],
+        "primary_key": ["campaign", "date"],
+        "incremental": true
+      }
+    }
+  ]
+}
+```
 
 # Development
 TODO: make public & add OAuth2 support
@@ -31,52 +90,6 @@ To run tests on local:
 The credentials to put into `.env` are to arbitrary authorized gmail account which contains an email with the subject `kbc-ex-gmail-attachments` and has an attachment `test.csv` with arbitrary content.
 (to get the refresh_token, check the snippet below)
 2. and run `run_tests.sh` script.
-
-## Get refresh token
-
-```python
-import requests
-def retrieve_authorization_code(client_id, redirect_uri='http://localhost):
-    authorization_code_req = {
-        "response_type": "code",
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "prompt": "consent",
-        "access_type": "offline",
-        "scope": (r"https://mail.google.com/")
-    }
-
-    r = requests.get(base_url + "auth",
-                     params=authorization_code_req,
-                     allow_redirects=False)
-    url = r.headers.get('location')
-    r.raise_for_status()
-    return url
-
-def retrieve_tokens(authorization_code, client_id, client_secret, redirect_uri):
-    access_token_req = {
-        "code" : authorization_code,
-        "client_id" : client_id,
-        "client_secret" : client_secret,
-        "redirect_uri" : redirect_uri,
-        "grant_type": "authorization_code",
-    }
-    r = requests.post(base_url + "token", data=access_token_req)   
-    r.raise_for_status()
-    return r.json()
-
-client_id=''
-client_secret=''
-redirect_uri='http://localhost'
-
-auth_url = retrieve_authorization_code(client_id)
-# visit this, grant consent
-print(auth_url)
-# copy the `code` parameter from the redirected uri
-authorization_code = "copied from above"
-tokens = retrieve_tokens(authorization_code, client_id, client_secret, redirect_uri)
-print(tokens['refresh_token'])
-```
 
 # License
 Use at your own risk, MIT
