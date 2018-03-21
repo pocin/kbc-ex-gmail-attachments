@@ -118,15 +118,15 @@ def main(params, client_id, client_secret, refresh_token, datadir):
 
 if __name__ == "__main__":
     try:
-        params, auth_data = parse_config()
+        datadir = os.environ["KBC_DATADIR"]
+        params, auth_data = parse_config(datadir)
         if params.get('debug'):
             logging.basicConfig(level=logging.DEBUG)
         else:
             logging.basicConfig(level=logging.INFO)
-        main(params, datadir=os.environ["KBC_DATADIR"], **auth_data)
+        main(params, datadir=datadir, **auth_data)
     except (ValueError, requests.HTTPError, AssertionError) as err:
         logging.error(err)
-
         sys.exit(1)
     except:
         logging.exception("Internal error")
