@@ -4,16 +4,16 @@ services:
   - docker
 
 before_script:
-  - docker-compose build
+  - docker build . --tag="pocin/kbc-ex-gmail-attachments:latest"
 script:
-  - docker-compose run dev python3 -m 'pytest'
+  - docker run --rm -e KBC_EX_CLIENT_ID -e KBC_EX_CLIENT_SECRET -e KBC_EX_REFRESH_TOKEN pocin/kbc-ex-gmail-attachments:latest python3 -m pytest
 after_success:
-  - docker-compose down
   - docker images
 
 deploy:
   provider: script
   skip_cleanup: true
+
   script: ./deploy.sh
   on:
     tags: true
