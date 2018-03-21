@@ -6,9 +6,6 @@ A basic gmail attachments extractor meant to be used alongside with processors.
 
 ```javascript
 {
-    "#refresh_token": "",
-    "client_id": "",
-    "#client_secret": "",
     "queries": [
         {
           "q": "suuubject has:attachment newer_than:21d",
@@ -28,9 +25,6 @@ Component:
 Downloads all emails matching given query (try it in your gmail inbox) into `/data/out/files` (since `"needs_processors": true`)
 ```
 {
-    "#refresh_token": "",
-    "client_id": "",
-    "#client_secret": "",
     "queries": [
         {
           "q": "subject:(AGENCY_NAME) campaign report has:attachment newer_than:3d",
@@ -91,7 +85,7 @@ To run tests on local:
 1. create the `.env` file (based on `.env-template`)
 The credentials to put into `.env` are to arbitrary authorized gmail account which contains an email with the subject `kbc-ex-gmail-attachments` and has an attachment `test.csv` with arbitrary content.
 (to get the refresh_token, check the snippet below)
-2. and run `run_tests.sh` script.
+2. and run `docker-compose dev python3 -m pytest`
 
 # License
 Use at your own risk, MIT
