@@ -4,11 +4,11 @@ services:
   - docker
 
 before_script:
-  - docker-compose build . --tag=my-component
+  - docker-compose build
 script:
   - docker-compose run dev python3 -m 'pytest'
-  - docker-compose down
 after_success:
+  - docker-compose down
   - docker images
 
 deploy:

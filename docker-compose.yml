@@ -2,7 +2,7 @@ version: '3'
 services:
   dev:
     build: .
-    image: "pocin/kbc-ex-gmail-attachments"
+    image: "pocin/kbc-ex-gmail-attachments:latest"
     tty: true
     stdin_open: true
     command: /bin/sh
