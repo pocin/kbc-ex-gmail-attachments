@@ -125,7 +125,8 @@ if __name__ == "__main__":
             logging.basicConfig(level=logging.INFO)
         main(params, datadir=os.environ["KBC_DATADIR"], **auth_data)
     except (ValueError, requests.HTTPError, AssertionError) as err:
-        logging.error("Something is wrong:")
+        logging.error(err)
+
         sys.exit(1)
     except:
         logging.exception("Internal error")
