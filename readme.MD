@@ -10,7 +10,7 @@ A basic gmail attachments extractor meant to be used alongside with processors.
     "client_id": "",
     "#client_secret": "",
     "queries": [
-        { "name": "ARBITRARY NAME reports",
+        {
           "q": "suuubject has:attachment newer_than:21d",
           "needs_processors": true
         }
@@ -26,17 +26,19 @@ The loaction `tables/files` depends on the `needs_processors` parameter.
 ### zipped csvs skipping header and footer (incrementaly)
 Component:
 Downloads all emails matching given query (try it in your gmail inbox) into `/data/out/files` (since `"needs_processors": true`)
+```
 {
     "#refresh_token": "",
     "client_id": "",
     "#client_secret": "",
     "queries": [
-        { "name": "ARBITRARY NAME reports, not used anywhere now",
+        {
           "q": "subject:(AGENCY_NAME) campaign report has:attachment newer_than:3d",
           "needs_processors": true
         }
     ]
 }
+```
 
 the newer_than:7d parameter ensures that if the extractor failed for some reason in the past, the next iteration will backfill the data.
 
