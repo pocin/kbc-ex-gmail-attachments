@@ -95,7 +95,7 @@ class GmailClient:
 class AttachmentsExtractor(GmailClient):
     def search_and_download_attachments(self, query, outdir):
         messages = self.messages(query)
-        for message in messages['messages']:
+        for message in messages.get('messages'):
             self.download_message_attachments(message['id'], outdir)
 
 def main(params, client_id, client_secret, refresh_token, datadir):
