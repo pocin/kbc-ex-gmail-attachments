@@ -1,6 +1,10 @@
 # About
 
 A basic gmail attachments extractor meant to be used alongside with processors.
+Until it's public, to create a new configuration, go to 
+
+https://connection.keboola.com/admin/projects/<project_id>/extractors/pocin.ex-gmail-attachments
+
 
 # Config
 
@@ -14,6 +18,7 @@ A basic gmail attachments extractor meant to be used alongside with processors.
     ]
 }
 ```
+
 will download all attachments (in all formats) for emails identified by the `q` querystring.
 The loaction `tables/files` depends on the `needs_processors` parameter. 
 - If the attachment is a valid csv, set `"needs_processors": "false` and it will be saved to `/data/out/tables`
@@ -79,13 +84,13 @@ In this case, the attachment is a `zip` containing a csv. All the csvs have same
 ```
 
 # Development
-TODO: make public & add OAuth2 support
 
 To run tests on local:
 1. create the `.env` file (based on `.env-template`)
-The credentials to put into `.env` are to arbitrary authorized gmail account which contains an email with the subject `kbc-ex-gmail-attachments` and has an attachment `test.csv` with arbitrary content.
-(to get the refresh_token, check the snippet below)
-2. and run `docker-compose dev python3 -m pytest`
+The credentials to put into `.env` are to arbitrary authorized gmail account/app.It must contain
+- an email with the subject `kbc-ex-gmail-attachments` and has an attachment `test.csv` with arbitrary content.
+- at least 30 emails in inbox (to test pagination)
+2. and run `docker-compose run --rm dev python3 -m pytest` or simply `make test`
 
 # License
 Use at your own risk, MIT
