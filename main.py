@@ -121,9 +121,9 @@ if __name__ == "__main__":
         datadir = os.environ["KBC_DATADIR"]
         params, auth_data = parse_config(datadir)
         if params.get('debug'):
-            logging.basicConfig(level=logging.DEBUG)
+            logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
         else:
-            logging.basicConfig(level=logging.INFO)
+            logging.basicConfig(stream=sys.stdout, level=logging.INFO)
         main(params, datadir=datadir, **auth_data)
     except (ValueError, requests.HTTPError, AssertionError) as err:
         logging.error(err)
