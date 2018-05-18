@@ -1,9 +1,6 @@
 # About
 
 A basic gmail attachments extractor meant to be used alongside with processors.
-Until it's public, to create a new configuration, go to 
-
-https://connection.keboola.com/admin/projects/<project_id>/extractors/pocin.ex-gmail-attachments
 
 
 # Config
@@ -19,7 +16,8 @@ https://connection.keboola.com/admin/projects/<project_id>/extractors/pocin.ex-g
 }
 ```
 
-will download all attachments (in all formats) for emails identified by the `q` querystring.
+will download all attachments (in all formats) for emails identified by the `q` [querystring](https://support.google.com/mail/answer/7190?hl=en). (You can test your `q` right inside your gmail inbox web interface)
+
 The loaction `tables/files` depends on the `needs_processors` parameter. 
 - If the attachment is a valid csv, set `"needs_processors": "false` and it will be saved to `/data/out/tables`
 - If the attachment is not a valid csv (xlsx, zip, ...), set it to `true`. The attachments will be downloaded to `/data/out/files` and processors should be used in that case (see example below)
