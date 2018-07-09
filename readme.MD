@@ -21,6 +21,7 @@ will download all attachments (in all formats) for emails identified by the `q` 
 The loaction `tables/files` depends on the `needs_processors` parameter. 
 - If the attachment is a valid csv, set `"needs_processors": "false` and it will be saved to `/data/out/tables`
 - If the attachment is not a valid csv (xlsx, zip, ...), set it to `true`. The attachments will be downloaded to `/data/out/files` and processors should be used in that case (see example below)
+- If the query `q` doesn't match any messages the extractor fails with user error (TODO: would a flag to ignore this be useful?)
 
 ## Examples
 ### zipped csvs skipping header and footer (incrementaly)

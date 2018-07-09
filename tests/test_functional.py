@@ -1,5 +1,6 @@
 import pytest
-from main import main
+import logging
+from main import main, AttachmentsExtractor
 import os
 
 def test_main_downloading_with_processors(tmpdir, auth_data):
@@ -32,3 +33,17 @@ def test_main_downloading_without_processors(tmpdir, auth_data):
     assert len(downloaded_files) == 1
     assert downloaded_files[0] == 'test.csv'
 
+
+
+def test_ValueError_if_query_doesnt_match_any_message(auth_data, tmpdir, caplog):
+    """Test if pagination is necessary"""
+    ex = AttachmentsExtractor(**auth_data)
+
+    q = "this_is_an_unexisting_query_should_fail_with_ValueError"
+    outdir = tmpdir.mkdir("out")
+    with pytest.raises(ValueError) as excinfo:
+        ex.search_and_download_attachments(
+            q,
+            outdir.strpath)
+
+    assert excinfo.match(r"^No messages matching")

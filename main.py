@@ -9,6 +9,7 @@ import logging
 
 REQUIRED_PARAMS = ['queries']
 
+
 def parse_config(folder='/data'):
     cfg = Config(folder)
     params = cfg.get_parameters()
@@ -94,9 +95,16 @@ class GmailClient:
 
 class AttachmentsExtractor(GmailClient):
     def search_and_download_attachments(self, query, outdir):
-        messages = self.messages(query)
-        for message in messages.get('messages'):
-            self.download_message_attachments(message['id'], outdir)
+        """Raises valueError if no matching messages are found
+        """
+        _messages = self.messages(query)
+        try:
+            messages = _messages['messages']
+        except KeyError:
+            raise ValueError("No messages matching '{}' found!".format(query))
+        else:
+            for message in messages:
+                self.download_message_attachments(message['id'], outdir)
 
 def main(params, client_id, client_secret, refresh_token, datadir):
     queries = params['queries']
