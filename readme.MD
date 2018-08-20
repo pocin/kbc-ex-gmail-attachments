@@ -38,16 +38,28 @@ Downloads all emails matching given query (try it in your gmail inbox) into `/da
 }
 ```
 
-the newer_than:7d parameter ensures that if the extractor failed for some reason in the past, the next iteration will backfill the data.
+the `newer_than:7d` parameter ensures that if the extractor failed for some reason in the past, the next iteration will backfill the data.
 
 In this case, the attachment is a `zip` containing a csv. All the csvs have same structure, hence we can consider them as a sliced table.
 ```
 {
   "after": [
     {"definition": {"component": "keboola.processor-decompress"}},
+```
+plain decompress - the gotcha is that `zip` archives are decompressed into a new folder so there is some nesting involved. Such table would be skipped on import so we use the `processor-flatten-folders`
+
+```
     {
       "definition": {"component": "keboola.processor-flatten-folders"},
       "parameters": {"starting_depth": 0}},
+```
+
+Move the csvs from `files` to a subfolder `tablename_in_storage`. Doing this turns the csvs into [sliced tables](https://developers.keboola.com/extend/common-interface/folders/#sliced-tables)
+This has many benefits
+- you can choose the name of the table in storage (by naming the folder appropriately, just don't forget the `.csv` suffix)
+- you can import multiple csvs in one run
+
+```
     {
       "definition": {"component": "keboola.processor-move-files"},
       "parameters": {
@@ -55,6 +67,11 @@ In this case, the attachment is a `zip` containing a csv. All the csvs have same
         "folder": "tablename_in_storage.csv"
       }
     },
+```
+
+Since the tables are now slices, they can not contain a header (+ there are 11 garbage lines) so we skip 11 + 1 (header) lines from the top. In this particular case there is a footer containing some `sums` so we skip it too.
+
+```
     {
       "definition": {"component": "keboola.processor-skip-lines"},
       "parameters": {
@@ -69,6 +86,11 @@ In this case, the attachment is a `zip` containing a csv. All the csvs have same
         "direction_from": "bottom"
       }
     },
+```
+
+Finally, since we skipped the header, we must define a manifest file. This brings an opportunity to set up incremental loading as well
+
+```
     {
       "definition": {"component": "keboola.processor-create-manifest"},
       "parameters": {
