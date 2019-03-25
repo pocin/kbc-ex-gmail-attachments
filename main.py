@@ -133,7 +133,7 @@ if __name__ == "__main__":
         else:
             logging.basicConfig(stream=sys.stdout, level=logging.INFO)
         main(params, datadir=datadir, **auth_data)
-    except (ValueError, requests.HTTPError, AssertionError) as err:
+    except (KeyError, ValueError, requests.HTTPError, AssertionError) as err:
         logging.error(err)
         sys.exit(1)
     except:
