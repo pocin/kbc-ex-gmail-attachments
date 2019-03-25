@@ -3,6 +3,7 @@ import logging
 from main import main, AttachmentsExtractor
 import os
 
+@pytest.mark.skip
 def test_main_downloading_with_processors(tmpdir, auth_data):
     params = {
         "queries": [
@@ -18,6 +19,7 @@ def test_main_downloading_with_processors(tmpdir, auth_data):
     assert len(downloaded_files) == 1
     assert downloaded_files[0] == 'test.csv'
 
+@pytest.mark.skip
 def test_main_downloading_without_processors(tmpdir, auth_data):
     params = {
         "queries": [
@@ -35,6 +37,7 @@ def test_main_downloading_without_processors(tmpdir, auth_data):
 
 
 
+@pytest.mark.skip
 def test_ValueError_if_query_doesnt_match_any_message(auth_data, tmpdir, caplog):
     """Test if pagination is necessary"""
     ex = AttachmentsExtractor(**auth_data)
