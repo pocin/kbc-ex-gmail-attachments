@@ -4,7 +4,7 @@ import logging
 from main import main, AttachmentsExtractor
 import os
 
-@pytest.mark.skipif(os.environ['CI'], reason='CI')
+@pytest.mark.skipif(os.getenv('CI', True), reason='CI')
 def test_main_downloading_with_processors(tmpdir, auth_data):
     params = {
         "queries": [
@@ -20,7 +20,7 @@ def test_main_downloading_with_processors(tmpdir, auth_data):
     assert len(downloaded_files) == 1
     assert downloaded_files[0] == 'one.csv'
 
-@pytest.mark.skipif(os.environ['CI'], reason='CI')
+@pytest.mark.skipif(os.getenv('CI', True), reason='CI')
 def test_main_downloading_without_processors(tmpdir, auth_data):
     params = {
         "queries": [
@@ -38,7 +38,7 @@ def test_main_downloading_without_processors(tmpdir, auth_data):
 
 
 
-@pytest.mark.skipif(os.environ['CI'], reason='CI')
+@pytest.mark.skipif(os.getenv('CI', True), reason='CI')
 def test_ValueError_if_query_doesnt_match_any_message(auth_data, tmpdir, caplog):
     """Test if pagination is necessary"""
     ex = AttachmentsExtractor(**auth_data)
@@ -53,7 +53,7 @@ def test_ValueError_if_query_doesnt_match_any_message(auth_data, tmpdir, caplog)
     assert excinfo.match(r"^No messages matching")
 
 
-@pytest.mark.skipif(os.environ['CI'], reason='CI')
+@pytest.mark.skipif(os.getenv('CI', True), reason='CI')
 def test_raise_error_on_duplicated_attachment_fielnames_without_processors(auth_data, tmpdir):
 
     params = {
@@ -69,7 +69,7 @@ def test_raise_error_on_duplicated_attachment_fielnames_without_processors(auth_
         # expecxt the file in out/files since needs_processors = False
     assert excinfo.match(r"^Attachment '")
 
-@pytest.mark.skipif(os.environ['CI'], reason='CI')
+@pytest.mark.skipif(os.getenv('CI', True), reason='CI')
 def test_renaming_duplicated_attachments_with_processors(auth_data, tmpdir):
 
     params = {
