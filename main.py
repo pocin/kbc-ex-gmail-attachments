@@ -1,4 +1,5 @@
 import requests
+from hashlib import md5
 import json
 import os
 import sys
@@ -74,16 +75,38 @@ class GmailClient:
         """query languge https://support.google.com/mail/answer/7190?hl=en"""
         return self._get('messages', params={"q" : q})
 
-    def _download_attachment(self, msg_id, attachment_id, outpath):
+    def _download_attachment(self, msg_id, attachment_id, outpath,
+                             allow_duplicates):
+        '''
+        Args:
+            allow_duplicates (bool): if true, and destination file already
+                exists, adds the attachment_id to the filename, otherwise raise
+                FileExistsError
+        '''
         endpoint = 'messages/{}/attachments/{}'.format(msg_id, attachment_id)
         logging.info("Downloading %s to %s", endpoint, outpath)
         resp = self._get(endpoint)
+
+        if os.path.isfile(outpath):
+            if allow_duplicates:
+                root, suffix = os.path.splitext(outpath)
+                # md5 because the attachment_id is a really loong string
+                unique = md5(attachment_id.encode('utf8')).hexdigest()
+                outpath = '{}_{}{}'.format(root, unique, suffix)
+            else:
+                raise FileExistsError("Attachment '{}' already exists".format(outpath))
         with open(outpath, 'wb') as fout:
             fout.write(base64.urlsafe_b64decode(resp['data']))
 
 
-    def download_message_attachments(self, message_id, outdir):
-        """Download all attachments for given message to outdir"""
+    def download_message_attachments(self, message_id, outdir, allow_duplicates):
+        """Download all attachments for given message to outdir
+
+        Args:
+            allow_duplicates (bool): if true, and destination file already
+                exists, adds the attachment_id to the filename, otherwise raise
+                FileExistsError
+        """
         logging.debug("Downloading attachments for %s", message_id)
         msg = self.message(message_id)
         for part in msg['payload']['parts']:
@@ -91,11 +114,17 @@ class GmailClient:
             if filename:
                 outpath = os.path.join(outdir, filename)
                 att_id = part['body']['attachmentId']
-                self._download_attachment(message_id, att_id, outpath)
+                self._download_attachment(message_id, att_id, outpath,
+                                          allow_duplicates)
 
 class AttachmentsExtractor(GmailClient):
-    def search_and_download_attachments(self, query, outdir):
+    def search_and_download_attachments(self, query, outdir, allow_duplicates=False):
         """Raises valueError if no matching messages are found
+
+        Args:
+            allow_duplicates (bool): if true, and destination file already
+                exists, adds the attachment_id to the filename, otherwise raise
+                FileExistsError
         """
         _messages = self.messages(query)
         try:
@@ -104,7 +133,8 @@ class AttachmentsExtractor(GmailClient):
             raise ValueError("No messages matching '{}' found!".format(query))
         else:
             for message in messages:
-                self.download_message_attachments(message['id'], outdir)
+                self.download_message_attachments(message['id'], outdir,
+                                                  allow_duplicates=allow_duplicates)
 
 def main(params, client_id, client_secret, refresh_token, datadir):
     queries = params['queries']
@@ -114,7 +144,8 @@ def main(params, client_id, client_secret, refresh_token, datadir):
         client_secret=client_secret,
         refresh_token=refresh_token)
     for query in queries:
-        if query.get('needs_processors'):
+        needs_processors = query.get('needs_processors', False)
+        if needs_processors:
             outdir = os.path.join(datadir, 'out/files')
         else:
             outdir = os.path.join(datadir, 'out/tables')
@@ -122,7 +153,22 @@ def main(params, client_id, client_secret, refresh_token, datadir):
             os.makedirs(outdir)
         except FileExistsError:
             pass
-        out = ex.search_and_download_attachments(query['q'], outdir)
+        try:
+            # if one is not using processors, we can't directly manipulate the
+            # filenames as they directly affect the tablename in Storage, hence
+            out = ex.search_and_download_attachments(
+                query=query['q'],
+                outdir=outdir,
+                allow_duplicates=needs_processors)
+        except (FileExistsError) as err:
+            logging.error((
+                'The querystring "{}" matched multiple emails with the same '
+                'attachment filename. Either set "needs_processors" parameter '
+                'to true and set up processors to leverage sliced tables, or '
+                'refine your query to match only one email').format(query['q']))
+            raise
+
+
 
 if __name__ == "__main__":
     try:
@@ -133,7 +179,8 @@ if __name__ == "__main__":
         else:
             logging.basicConfig(stream=sys.stdout, level=logging.INFO)
         main(params, datadir=datadir, **auth_data)
-    except (KeyError, ValueError, requests.HTTPError, AssertionError) as err:
+    except (KeyError, ValueError, requests.HTTPError, AssertionError,
+            FileExistsError) as err:
         logging.error(err)
         sys.exit(1)
     except:
