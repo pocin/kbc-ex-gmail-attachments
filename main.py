@@ -116,6 +116,18 @@ class GmailClient:
                 att_id = part['body']['attachmentId']
                 self._download_attachment(message_id, att_id, outpath,
                                           allow_duplicates)
+            for part2 in part.get('parts', iter([])):
+                # might be a really weird second level nesting
+                # https://github.com/pocin/kbc-ex-gmail-attachments/issues/8
+                filename = part2['filename']
+                if filename:
+                    outpath = os.path.join(outdir, filename)
+                    att_id = part2['body']['attachmentId']
+                    self._download_attachment(message_id,
+                                              att_id, outpath,
+                                              allow_duplicates)
+
+
 
 class AttachmentsExtractor(GmailClient):
     def search_and_download_attachments(self, query, outdir, allow_duplicates=False):
