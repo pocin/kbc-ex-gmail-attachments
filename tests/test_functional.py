@@ -86,3 +86,21 @@ def test_renaming_duplicated_attachments_with_processors(auth_data, tmpdir):
     assert len(downloaded_files) == 2
     for f in downloaded_files:
         assert f.startswith('same') and f.endswith('.csv')
+
+
+@pytest.mark.skipif(os.getenv('CI', True), reason='CI')
+def test_downloading_exotic_attachment(auth_data, tmpdir):
+    params = {
+        "queries": [
+            {
+                "q": "from:isite@toyota-industries.eu has:attachment",
+                "needs_processors": True
+            }
+        ]
+    }
+    main(params, datadir=tmpdir.strpath, **auth_data)
+
+    downloaded_files = os.listdir(os.path.join(tmpdir.strpath, 'out/files'))
+    assert len(downloaded_files) == 1
+    for f in downloaded_files:
+        assert f == 'robin_test.xlsx'
