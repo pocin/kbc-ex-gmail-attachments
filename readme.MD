@@ -10,7 +10,8 @@ A basic gmail attachments extractor meant to be used alongside with processors.
     "queries": [
         {
           "q": "suuubject has:attachment newer_than:21d",
-          "needs_processors": true
+          "needs_processors": true,
+          "skip_missing": false
         }
     ]
 }
@@ -21,7 +22,7 @@ will download all attachments (in all formats) for emails identified by the `q` 
 The loaction `tables/files` depends on the `needs_processors` parameter. 
 - If the attachment is a valid csv, set `"needs_processors": "false` and it will be saved to `/data/out/tables`
 - If the attachment is not a valid csv (xlsx, zip, ...), set it to `true`. The attachments will be downloaded to `/data/out/files` and processors should be used in that case (see example below)
-- If the query `q` doesn't match any messages the extractor fails with user error (TODO: would a flag to ignore this be useful?)
+- If the query `q` doesn't match any messages the extractor fails by default. If you want to skip these errors, set `"skip_missing": true`
 - If the query `q` matches multiple messages and they contain attachments with overlapping names, the behavior depends on `needs_processors`
     - if `needs_processors` is `true` an unique value is appended to the filename (`my_file.csv` becomes `my_file_XXXXYYYYZZZZWWWW.csv`) and you need to use appropriate combination of processors to move the csvs into a folder (so they act as a sliced files) and create a manifest.
     - if `needs_processors` is `false` the extractor raises an error. In this case the extractor can't modify the attachment filename because the filename is the same as the table name in Storage. If you get this error, either modify your `q` or use processors.

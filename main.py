@@ -127,11 +127,12 @@ class GmailClient:
                                               att_id, outpath,
                                               allow_duplicates)
 
-
+class NoMatchingMessagesError(Exception):
+    pass
 
 class AttachmentsExtractor(GmailClient):
     def search_and_download_attachments(self, query, outdir, allow_duplicates=False):
-        """Raises valueError if no matching messages are found
+        """Raises NoMatchingMessagesError if no matching messages are found
 
         Args:
             allow_duplicates (bool): if true, and destination file already
@@ -142,7 +143,7 @@ class AttachmentsExtractor(GmailClient):
         try:
             messages = _messages['messages']
         except KeyError:
-            raise ValueError("No messages matching '{}' found!".format(query))
+            raise NoMatchingMessagesError("No messages matching '{}' found!".format(query))
         else:
             for message in messages:
                 self.download_message_attachments(message['id'], outdir,
@@ -157,6 +158,7 @@ def main(params, client_id, client_secret, refresh_token, datadir):
         refresh_token=refresh_token)
     for query in queries:
         needs_processors = query.get('needs_processors', False)
+        skip_missing = query.get('skip_missing', False)
         if needs_processors:
             outdir = os.path.join(datadir, 'out/files')
         else:
@@ -179,6 +181,14 @@ def main(params, client_id, client_secret, refresh_token, datadir):
                 'to true and set up processors to leverage sliced tables, or '
                 'refine your query to match only one email').format(query['q']))
             raise
+        except NoMatchingMessagesError as err:
+            if skip_missing:
+                logging.info(err)
+                logging.info("Skipping")
+            else:
+                raise
+
+
 
 
 
@@ -191,7 +201,7 @@ if __name__ == "__main__":
         else:
             logging.basicConfig(stream=sys.stdout, level=logging.INFO)
         main(params, datadir=datadir, **auth_data)
-    except (KeyError, ValueError, requests.HTTPError, AssertionError,
+    except (KeyError, NoMatchingMessagesError, requests.HTTPError, AssertionError,
             FileExistsError) as err:
         logging.error(err)
         sys.exit(1)

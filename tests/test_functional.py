@@ -1,7 +1,7 @@
 import pytest
 import re
 import logging
-from main import main, AttachmentsExtractor
+from main import main, AttachmentsExtractor, NoMatchingMessagesError
 import os
 
 @pytest.mark.skipif(os.getenv('CI', True), reason='CI')
@@ -39,13 +39,13 @@ def test_main_downloading_without_processors(tmpdir, auth_data):
 
 
 @pytest.mark.skipif(os.getenv('CI', True), reason='CI')
-def test_ValueError_if_query_doesnt_match_any_message(auth_data, tmpdir, caplog):
+def test_error_if_query_doesnt_match_any_message(auth_data, tmpdir, caplog):
     """Test if pagination is necessary"""
     ex = AttachmentsExtractor(**auth_data)
 
     q = "this_is_an_unexisting_query_should_fail_with_ValueError"
     outdir = tmpdir.mkdir("out")
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(NoMatchingMessagesError) as excinfo:
         ex.search_and_download_attachments(
             q,
             outdir.strpath)
